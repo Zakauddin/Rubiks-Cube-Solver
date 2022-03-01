@@ -1,4 +1,3 @@
-from vpython import *  # For 3D
 import copy
 
 
@@ -6,29 +5,29 @@ class Cube:
     def __init__(self):
         self.parent = self
         self.rotationApplied = "Initial"
-        self.top = [['y', 'y', 'y'],
-                    ['y', 'y', 'y'],
-                    ['y', 'y', 'y']]
+        self.top = [['Y', 'Y', 'Y'],
+                    ['Y', 'Y', 'Y'],
+                    ['Y', 'Y', 'Y']]
 
-        self.back = [['o', 'o', 'o'],
-                     ['o', 'o', 'o'],
-                     ['o', 'o', 'o']]
+        self.left = [['O', 'O', 'O'],
+                     ['O', 'O', 'O'],
+                     ['O', 'O', 'O']]
 
-        self.left = [['b', 'b', 'b'],
-                     ['b', 'b', 'b'],
-                     ['b', 'b', 'b']]
+        self.front = [['B', 'B', 'B'],
+                      ['B', 'B', 'B'],
+                      ['B', 'B', 'B']]
 
-        self.front = [['r', 'r', 'r'],
-                      ['r', 'r', 'r'],
-                      ['r', 'r', 'r']]
+        self.right = [['R', 'R', 'R'],
+                      ['R', 'R', 'R'],
+                      ['R', 'R', 'R']]
 
-        self.right = [['g', 'g', 'g'],
-                      ['g', 'g', 'g'],
-                      ['g', 'g', 'g']]
+        self.back = [['G', 'G', 'G'],
+                     ['G', 'G', 'G'],
+                     ['G', 'G', 'G']]
 
-        self.bottom = [['w', 'w', 'w'],
-                       ['w', 'w', 'w'],
-                       ['w', 'w', 'w']]
+        self.bottom = [['W', 'W', 'W'],
+                       ['W', 'W', 'W'],
+                       ['W', 'W', 'W']]
 
     def rotate_right(self):
         temp = [self.front[0][2], self.front[1][2], self.front[2][2]]
@@ -59,6 +58,11 @@ class Cube:
         self.right[1][2] = temp1[0]
 
     def rotate_left(self):
+        # front will be overriden by top
+        # top will be overriden by back
+        # back will be overriden by bottom
+        # bottom will be overriden by temp
+        # left will be replaced through convention
 
         temp = [self.front[0][0], self.front[1][0], self.front[2][0]]
         self.front[0][0] = self.top[0][0]
@@ -200,22 +204,22 @@ class Cube:
         self.bottom[1][2] = temp1[0]
 
     def is_solved(self):
-        if self.top != [['y', 'y', 'y'], ['y', 'y', 'y'], ['y', 'y', 'y']]:
+        if self.top != [['Y', 'Y', 'Y'], ['Y', 'Y', 'Y'], ['Y', 'Y', 'Y']]:
             return False
 
-        if self.back != [['o', 'o', 'o'], ['o', 'o', 'o'], ['o', 'o', 'o']]:
+        if self.left != [['O', 'O', 'O'], ['O', 'O', 'O'], ['O', 'O', 'O']]:
             return False
 
-        if self.left != [['b', 'b', 'b'], ['b', 'b', 'b'], ['b', 'b', 'b']]:
+        if self.front != [['B', 'B', 'B'], ['B', 'B', 'B'], ['B', 'B', 'B']]:
             return False
 
-        if self.front != [['r', 'r', 'r'], ['r', 'r', 'r'], ['r', 'r', 'r']]:
+        if self.right != [['R', 'R', 'R'], ['R', 'R', 'R'], ['R', 'R', 'R']]:
             return False
 
-        if self.right != [['g', 'g', 'g'], ['g', 'g', 'g'], ['g', 'g', 'g']]:
+        if self.back != [['G', 'G', 'G'], ['G', 'G', 'G'], ['G', 'G', 'G']]:
             return False
 
-        if self.bottom != [['w', 'w', 'w'], ['w', 'w', 'w'], ['w', 'w', 'w']]:
+        if self.bottom != [['W', 'W', 'W'], ['W', 'W', 'W'], ['W', 'W', 'W']]:
             return False
 
         return True
@@ -257,60 +261,11 @@ class Cube:
             print("                  ", self.bottom[row])
 
 
-moveNbr = 0  # Number of movements performed, useful for statistics
-fps = 24  # For the visual, number of images per second
-
-# Plot the correspondence between faces and vectors
-faces = {'F': (color.red, vector(0, 0, 1)),
-         'B': (color.orange, vector(0, 0, -1)),
-         'U': (color.yellow, vector(0, 1, 0)),
-         'L': (color.blue, vector(-1, 0, 0)),
-         'D': (color.white, vector(0, -1, 0)),
-         'R': (color.green, vector(1, 0, 0))}
-
-# Put the colors on each small cube, face by face.
-stickers = []
-for face_color, axis in faces.values():
-    for x in (-1, 0, 1):
-        for y in (-1, 0, 1):
-            # Start with all the stickers up, then we turn
-
-            sticker = box(color=face_color, pos=vector(x, y, 1.5),
-                          length=0.98, height=0.98, width=0.05)
-            cos_angle = dot(vector(0, 0, 1), axis)
-            pivot = (cross(vector(0, 0, 1), axis) if cos_angle == 0 else vector(1, 0, 0))
-            sticker.rotate(angle=acos(cos_angle), axis=pivot, origin=vector(0, 0, 0))
-            stickers.append(sticker)
-
-
-# Rotate parts of the cube in 3 dimensions
-def rotate3D(key):
-    if key[0] in faces:
-        face_color, axis = faces[key[0]]
-        angle = ((pi / 2) if len(key) > 1 else -pi / 2)
-        for r in arange(0, angle, angle / fps):
-            rate(fps)
-            for sticker in stickers:
-                if dot(sticker.pos, axis) > 0.5:
-                    sticker.rotate(angle=angle / fps, axis=axis,
-                                   origin=vector(0, 0, 0))
-    elif key[0] == 'E':
-        axis = vector(0, 0.5, 0)
-        angle = ((pi / 2) if len(key) > 1 else -pi / 2)
-        for r in arange(0, angle, angle / fps):
-            rate(fps)
-            for sticker in stickers:
-                sticker.rotate(angle=angle / fps, axis=axis, origin=vector(0, 0, 0))
-
-
 cube = Cube()
 
 cube.rotate_back()
-rotate3D("B")
-cube.rotate_front()
-rotate3D("F")
-cube.print_cube()
-sleep(3)
+cube.rotate_right()
+
 
 queue = []
 alreadyVisitedArray = []
@@ -336,37 +291,37 @@ while not done:
 
             cube1 = copy.deepcopy(cube)
             cube1.parent = cube
-            cube1.rotationApplied = "U"
+            cube1.rotationApplied = "Top"
             cube1.rotate_top()
             queue.append(cube1)
 
             cube1 = copy.deepcopy(cube)
             cube1.parent = cube
-            cube1.rotationApplied = "D"
+            cube1.rotationApplied = "Bottom"
             cube1.rotate_bottom()
             queue.append(cube1)
 
             cube1 = copy.deepcopy(cube)
             cube1.parent = cube
-            cube1.rotationApplied = "L"
+            cube1.rotationApplied = "Left"
             cube1.rotate_left()
             queue.append(cube1)
 
             cube1 = copy.deepcopy(cube)
             cube1.parent = cube
-            cube1.rotationApplied = "R"
+            cube1.rotationApplied = "Right"
             cube1.rotate_right()
             queue.append(cube1)
 
             cube1 = copy.deepcopy(cube)
             cube1.parent = cube
-            cube1.rotationApplied = "B"
+            cube1.rotationApplied = "Back"
             cube1.rotate_back()
             queue.append(cube1)
 
             cube1 = copy.deepcopy(cube)
             cube1.parent = cube
-            cube1.rotationApplied = "F"
+            cube1.rotationApplied = "Front"
             cube1.rotate_front()
             queue.append(cube1)
 
@@ -381,6 +336,5 @@ solution.insert(0, cube)
 
 for i in solution:
     print(i.rotationApplied)
-    rotate3D(i.rotationApplied)
     i.print_cube()
     print("")
