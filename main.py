@@ -301,15 +301,16 @@ def rotate3D(key):
             rate(fps)
             for sticker in stickers:
                 sticker.rotate(angle=angle / fps, axis=axis, origin=vector(0, 0, 0))
+    sleep(1)
 
 
 cube = Cube()
-
 cube.rotate_back()
 rotate3D("B")
+
 cube.rotate_front()
 rotate3D("F")
-cube.print_cube()
+
 sleep(3)
 
 queue = []
@@ -384,3 +385,4 @@ for i in solution:
     rotate3D(i.rotationApplied)
     i.print_cube()
     print("")
+
